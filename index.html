@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexera Pay — Status</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: linear-gradient(180deg, #0a0e27 0%, #131b3a 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 48px; }
+    .logo {
+      display: inline-flex; align-items: baseline; gap: 2px;
+      font-weight: 900; font-size: 28px; letter-spacing: -0.5px;
+    }
+    .logo .n { color: #a78bfa; }
+    .logo .p { color: #67e8f9; }
+    h1 {
+      font-size: 20px; font-weight: 600; color: #9ca3af;
+      margin-top: 12px; letter-spacing: 0.5px;
+    }
+    .overall {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 16px; padding: 32px; text-align: center;
+      margin-bottom: 32px;
+    }
+    .overall.degraded {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .overall.down {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .overall .dot {
+      display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+      background: #10b981; margin-right: 10px; vertical-align: middle;
+      animation: pulse 2s infinite;
+    }
+    .overall.degraded .dot { background: #f59e0b; }
+    .overall.down .dot { background: #ef4444; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .overall h2 { font-size: 24px; font-weight: 700; display: inline-block; }
+    .overall p { color: #9ca3af; margin-top: 8px; font-size: 14px; }
+    .services { display: grid; gap: 12px; }
+    .service {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px; padding: 20px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .service .name { font-weight: 600; font-size: 15px; }
+    .service .desc { color: #6b7280; font-size: 12px; margin-top: 4px; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-badge.up { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-badge.degraded { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .status-badge.down { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .status-badge.checking { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
+    .status-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+    }
+    .history {
+      display: flex; gap: 3px; margin-top: 12px; height: 24px;
+    }
+    .bar { flex: 1; background: #10b981; border-radius: 2px; opacity: 0.7; }
+    .bar.down { background: #ef4444; }
+    .bar.no-data { background: rgba(255, 255, 255, 0.05); }
+    footer {
+      text-align: center; margin-top: 48px;
+      color: #6b7280; font-size: 12px;
+    }
+    footer a { color: #a78bfa; text-decoration: none; }
+    .updated {
+      text-align: center; color: #6b7280; font-size: 12px;
+      margin-top: 24px;
+    }
+    @media (max-width: 640px) {
+      .service { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .status-badge { align-self: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo"><span class="n">Nexera</span><span class="p"> Pay</span></div>
+      <h1>SYSTEM STATUS</h1>
+    </header>
+
+    <div id="overall" class="overall">
+      <span class="dot"></span>
+      <h2 id="overall-title">Vérification en cours…</h2>
+      <p id="overall-subtitle">Chargement du statut des services…</p>
+    </div>
+
+    <div class="services">
+      <div class="service" data-check="api">
+        <div>
+          <div class="name">API Nexera Pay</div>
+          <div class="desc">Endpoints publics pay.nexera.africa/v1/*</div>
+          <div class="history" id="history-api"></div>
+        </div>
+        <span class="status-badge checking" id="status-api">
+          <span class="dot"></span>Checking
+        </span>
+      </div>
+      <div class="service" data-check="db">
+        <div>
+          <div class="name">Base de données</div>
+          <div class="desc">MySQL nexera_pay (transactions + audit log)</div>
+        </div>
+        <span class="status-badge checking" id="status-db">
+          <span class="dot"></span>Checking
+        </span>
+      </div>
+      <div class="service" data-check="redis">
+        <div>
+          <div class="name">Cache Redis</div>
+          <div class="desc">Idempotency + rate limit + queue webhooks</div>
+        </div>
+        <span class="status-badge checking" id="status-redis">
+          <span class="dot"></span>Checking
+        </span>
+      </div>
+      <div class="service" data-check="moko_mm_configured">
+        <div>
+          <div class="name">Moko Mobile Money</div>
+          <div class="desc">PayDRC — M-Pesa, Airtel, Orange, Afrimoney</div>
+        </div>
+        <span class="status-badge checking" id="status-moko_mm_configured">
+          <span class="dot"></span>Checking
+        </span>
+      </div>
+      <div class="service" data-check="moko_card_configured">
+        <div>
+          <div class="name">Moko Card</div>
+          <div class="desc">Cybersource wrapper — Visa, Mastercard, 3DS</div>
+        </div>
+        <span class="status-badge checking" id="status-moko_card_configured">
+          <span class="dot"></span>Checking
+        </span>
+      </div>
+    </div>
+
+    <div class="updated" id="updated">Dernière vérification : jamais</div>
+
+    <footer>
+      <p>
+        Historique + incidents détaillés sur GitHub :
+        <a href="https://github.com/nexera-africa/nexera-pay-status">nexera-africa/nexera-pay-status</a>
+      </p>
+      <p style="margin-top: 8px">
+        Refresh auto toutes les 30 secondes · Nexera Pay v1
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const HEALTH_URL = 'https://pay.nexera.africa/health/deep';
+    const HISTORY_KEY = 'nexera-pay-history';
+    const HISTORY_LEN = 60;   // 60 checks × 30s = 30 min glissantes
+
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || {}; }
+      catch { return {}; }
+    }
+    function saveHistory(h) { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
+
+    function setStatus(id, state, label) {
+      const el = document.getElementById('status-' + id);
+      if (!el) return;
+      el.className = 'status-badge ' + state;
+      el.innerHTML = '<span class="dot"></span>' + label;
+    }
+
+    function renderHistory(id, entries) {
+      const container = document.getElementById('history-' + id);
+      if (!container) return;
+      container.innerHTML = '';
+      // Padd si pas plein
+      const padded = Array(HISTORY_LEN - entries.length).fill(null).concat(entries).slice(-HISTORY_LEN);
+      padded.forEach(v => {
+        const bar = document.createElement('div');
+        bar.className = 'bar' + (v === null ? ' no-data' : v === false ? ' down' : '');
+        container.appendChild(bar);
+      });
+    }
+
+    async function check() {
+      let data = null; let overall = 'down';
+      const history = loadHistory();
+
+      try {
+        const res = await fetch(HEALTH_URL, { cache: 'no-store' });
+        if (res.ok) {
+          data = await res.json();
+          overall = 'up';
+        }
+      } catch (e) {
+        overall = 'down';
+      }
+
+      const checks = ['api', 'db', 'redis', 'moko_mm_configured', 'moko_card_configured'];
+      checks.forEach(key => {
+        let ok;
+        if (key === 'api') ok = data !== null;
+        else if (data && data[key] !== undefined) {
+          ok = data[key] === 'ok' || data[key] === true;
+        } else ok = null;
+
+        if (ok === true) setStatus(key, 'up', 'Opérationnel');
+        else if (ok === false) setStatus(key, 'down', 'Down');
+        else setStatus(key, 'degraded', 'Non-configuré');
+
+        if (ok !== null) {
+          if (!history[key]) history[key] = [];
+          history[key].push(ok);
+          history[key] = history[key].slice(-HISTORY_LEN);
+        }
+        renderHistory(key, history[key] || []);
+      });
+      saveHistory(history);
+
+      const overallEl = document.getElementById('overall');
+      const title = document.getElementById('overall-title');
+      const sub = document.getElementById('overall-subtitle');
+      if (overall === 'up') {
+        overallEl.className = 'overall';
+        title.textContent = 'All Systems Operational';
+        sub.textContent = 'Tous les services Nexera Pay fonctionnent normalement.';
+      } else {
+        overallEl.className = 'overall down';
+        title.textContent = 'Service Disruption';
+        sub.textContent = 'Impossible de joindre pay.nexera.africa — vérifie ta connexion ou reviens dans quelques minutes.';
+      }
+
+      document.getElementById('updated').textContent =
+        'Dernière vérification : ' + new Date().toLocaleString('fr-FR');
+    }
+
+    check();
+    setInterval(check, 30_000);
+  </script>
+</body>
+</html>
