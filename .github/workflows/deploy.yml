@@ -1,0 +1,40 @@
+name: Deploy status.nexera.africa
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'nexera-logo.png'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: status-nexera-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DROPLET_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy static files
+        # On rsync uniquement les 2 assets réels — pas .git, pas .github, pas README.
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
+            index.html nexera-logo.png \
+            root@${{ secrets.DROPLET_IP }}:/var/www/nexera-pay-status/
+
+      - name: Smoke test
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" https://status.nexera.africa/)
+          [ "$code" = "200" ] || { echo "HTTP $code"; exit 1; }
+          echo "status.nexera.africa OK"
