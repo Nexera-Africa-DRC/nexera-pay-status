@@ -4,93 +4,245 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexera Pay — Status</title>
+  <link rel="icon" type="image/png" href="/nexera-logo.png">
+  <link rel="apple-touch-icon" href="/nexera-logo.png">
+  <meta name="theme-color" content="#0a0e27">
+  <meta property="og:title" content="Nexera Pay — Status">
+  <meta property="og:description" content="Statut en temps réel des services Nexera Pay">
+  <meta property="og:image" content="https://status.nexera.africa/nexera-logo.png">
   <style>
+    :root {
+      --bg-1: #060a1e;
+      --bg-2: #0c1230;
+      --bg-3: #131b44;
+      --card: rgba(255, 255, 255, 0.035);
+      --card-border: rgba(148, 163, 210, 0.14);
+      --card-hover: rgba(255, 255, 255, 0.06);
+      --text: #e5ecff;
+      --text-dim: #8b93b8;
+      --text-mute: #5c6488;
+      --brand: #7c8bff;
+      --brand-glow: rgba(124, 139, 255, 0.35);
+      --up: #10b981;
+      --up-glow: rgba(16, 185, 129, 0.25);
+      --warn: #f59e0b;
+      --warn-glow: rgba(245, 158, 11, 0.25);
+      --down: #ef4444;
+      --down-glow: rgba(239, 68, 68, 0.25);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      background: linear-gradient(180deg, #0a0e27 0%, #131b3a 100%);
-      color: #e5e7eb;
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(124, 139, 255, 0.10), transparent 45%),
+        radial-gradient(circle at 80% 100%, rgba(103, 232, 249, 0.06), transparent 40%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+      background-attachment: fixed;
+      color: var(--text);
       min-height: 100vh;
-      padding: 40px 20px;
+      padding: 48px 20px 64px;
     }
-    .container { max-width: 900px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 48px; }
-    .logo {
-      display: inline-flex; align-items: baseline; gap: 2px;
-      font-weight: 900; font-size: 28px; letter-spacing: -0.5px;
+    .container { max-width: 880px; margin: 0 auto; }
+    header {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; margin-bottom: 40px;
     }
-    .logo .n { color: #a78bfa; }
-    .logo .p { color: #67e8f9; }
-    h1 {
-      font-size: 20px; font-weight: 600; color: #9ca3af;
-      margin-top: 12px; letter-spacing: 0.5px;
+    header .logo {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 8px 18px 8px 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      backdrop-filter: blur(20px);
     }
+    header .logo img { width: 28px; height: 28px; border-radius: 8px; }
+    header .logo .wordmark {
+      font-weight: 800; font-size: 15px; letter-spacing: -0.2px;
+      color: var(--text);
+    }
+    header .logo .wordmark .sub {
+      color: var(--brand); font-weight: 700;
+    }
+    header .kicker {
+      margin-top: 20px;
+      font-size: 11px; font-weight: 800;
+      letter-spacing: 0.24em; text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    header h1 {
+      margin-top: 8px;
+      font-size: 32px; font-weight: 900; letter-spacing: -0.6px;
+      color: var(--text);
+    }
+
     .overall {
-      background: rgba(16, 185, 129, 0.1);
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 28px;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+    .overall::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, var(--up-glow), transparent);
+      opacity: 0.4; pointer-events: none;
+      transition: all 0.5s ease;
+    }
+    .overall.degraded::before { background: linear-gradient(90deg, transparent, var(--warn-glow), transparent); }
+    .overall.down::before { background: linear-gradient(90deg, transparent, var(--down-glow), transparent); }
+    .overall-inner {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .overall-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(16, 185, 129, 0.15);
       border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 16px; padding: 32px; text-align: center;
-      margin-bottom: 32px;
+      color: var(--up);
+      flex-shrink: 0;
+      transition: all 0.4s;
     }
-    .overall.degraded {
-      background: rgba(245, 158, 11, 0.1);
-      border-color: rgba(245, 158, 11, 0.3);
+    .overall.degraded .overall-icon {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3); color: var(--warn);
     }
-    .overall.down {
-      background: rgba(239, 68, 68, 0.1);
-      border-color: rgba(239, 68, 68, 0.3);
+    .overall.down .overall-icon {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3); color: var(--down);
     }
-    .overall .dot {
-      display: inline-block; width: 12px; height: 12px; border-radius: 50%;
-      background: #10b981; margin-right: 10px; vertical-align: middle;
-      animation: pulse 2s infinite;
+    .overall-icon svg { width: 26px; height: 26px; }
+    .overall-icon .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: currentColor;
+      animation: pulse-dot 1.8s infinite;
     }
-    .overall.degraded .dot { background: #f59e0b; }
-    .overall.down .dot { background: #ef4444; }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    @keyframes pulse-dot {
+      0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+      70% { box-shadow: 0 0 0 12px transparent; opacity: 0.8; }
+      100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
     }
-    .overall h2 { font-size: 24px; font-weight: 700; display: inline-block; }
-    .overall p { color: #9ca3af; margin-top: 8px; font-size: 14px; }
-    .services { display: grid; gap: 12px; }
+    .overall-copy { flex: 1; min-width: 0; }
+    .overall-copy h2 {
+      font-size: 22px; font-weight: 800; letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .overall-copy p {
+      font-size: 13px; color: var(--text-dim); margin-top: 4px;
+      font-weight: 500;
+    }
+    .overall-uptime {
+      text-align: right; flex-shrink: 0;
+    }
+    .overall-uptime .num {
+      font-size: 22px; font-weight: 900; color: var(--up);
+      letter-spacing: -0.3px; font-variant-numeric: tabular-nums;
+    }
+    .overall.degraded .overall-uptime .num { color: var(--warn); }
+    .overall.down .overall-uptime .num { color: var(--down); }
+    .overall-uptime .lbl {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--text-mute); font-weight: 700; margin-top: 4px;
+    }
+
+    .services { display: grid; gap: 10px; }
     .service {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px; padding: 20px 24px;
-      display: flex; align-items: center; justify-content: space-between;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      transition: all 0.2s;
+      backdrop-filter: blur(10px);
     }
-    .service .name { font-weight: 600; font-size: 15px; }
-    .service .desc { color: #6b7280; font-size: 12px; margin-top: 4px; }
+    .service:hover {
+      background: var(--card-hover);
+      border-color: rgba(148, 163, 210, 0.22);
+    }
+    .service .service-copy { min-width: 0; flex: 1; }
+    .service .name {
+      font-weight: 700; font-size: 14.5px; color: var(--text);
+      letter-spacing: -0.1px;
+    }
+    .service .desc {
+      color: var(--text-mute); font-size: 12px; margin-top: 3px;
+      font-weight: 500;
+    }
+    .service .history {
+      display: flex; gap: 2px; margin-top: 10px; height: 20px;
+    }
+    .bar {
+      flex: 1; background: var(--up); border-radius: 3px; opacity: 0.55;
+      transition: opacity 0.2s;
+      max-width: 6px;
+    }
+    .bar:hover { opacity: 1; }
+    .bar.down { background: var(--down); opacity: 0.8; }
+    .bar.no-data { background: rgba(148, 163, 210, 0.08); }
+
     .status-badge {
       display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 12px; border-radius: 20px;
-      font-size: 12px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.5px;
+      padding: 7px 14px; border-radius: 999px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.08em; flex-shrink: 0;
+      transition: all 0.2s;
     }
-    .status-badge.up { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-    .status-badge.degraded { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-    .status-badge.down { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-    .status-badge.checking { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
-    .status-badge .dot {
-      width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+    .status-badge.up {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--up); border: 1px solid rgba(16, 185, 129, 0.28);
     }
-    .history {
-      display: flex; gap: 3px; margin-top: 12px; height: 24px;
+    .status-badge.degraded {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--warn); border: 1px solid rgba(245, 158, 11, 0.28);
     }
-    .bar { flex: 1; background: #10b981; border-radius: 2px; opacity: 0.7; }
-    .bar.down { background: #ef4444; }
-    .bar.no-data { background: rgba(255, 255, 255, 0.05); }
+    .status-badge.down {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--down); border: 1px solid rgba(239, 68, 68, 0.28);
+    }
+    .status-badge.checking {
+      background: rgba(148, 163, 210, 0.08);
+      color: var(--text-mute); border: 1px solid rgba(148, 163, 210, 0.16);
+    }
+    .status-badge .b-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    }
+    .status-badge.up .b-dot { box-shadow: 0 0 6px currentColor; }
+
+    .updated {
+      text-align: center; color: var(--text-mute);
+      font-size: 12px; margin-top: 28px; font-weight: 500;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .updated .refresh-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--brand);
+      animation: pulse-dot 2s infinite;
+    }
     footer {
       text-align: center; margin-top: 48px;
-      color: #6b7280; font-size: 12px;
+      color: var(--text-mute); font-size: 12px; line-height: 1.7;
     }
-    footer a { color: #a78bfa; text-decoration: none; }
-    .updated {
-      text-align: center; color: #6b7280; font-size: 12px;
-      margin-top: 24px;
+    footer a {
+      color: var(--brand); text-decoration: none; font-weight: 600;
     }
+    footer a:hover { text-decoration: underline; }
+    footer .signature {
+      margin-top: 24px; padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-dim); font-weight: 700;
+    }
+    footer .signature .brand { color: var(--brand); }
+
     @media (max-width: 640px) {
-      .service { flex-direction: column; align-items: flex-start; gap: 12px; }
+      body { padding: 32px 16px 48px; }
+      header h1 { font-size: 26px; }
+      .overall { padding: 24px 20px; }
+      .overall-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .overall-uptime { text-align: left; }
+      .service { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 18px; }
       .status-badge { align-self: flex-start; }
     }
   </style>
@@ -98,75 +250,92 @@
 <body>
   <div class="container">
     <header>
-      <div class="logo"><span class="n">Nexera</span><span class="p"> Pay</span></div>
-      <h1>SYSTEM STATUS</h1>
+      <div class="logo">
+        <img src="/nexera-logo.png" alt="Nexera" />
+        <span class="wordmark">Nexera <span class="sub">Pay</span></span>
+      </div>
+      <div class="kicker">System Status</div>
+      <h1 id="page-title">Vérification…</h1>
     </header>
 
     <div id="overall" class="overall">
-      <span class="dot"></span>
-      <h2 id="overall-title">Vérification en cours…</h2>
-      <p id="overall-subtitle">Chargement du statut des services…</p>
+      <div class="overall-inner">
+        <div class="overall-icon" id="overall-icon">
+          <div class="dot"></div>
+        </div>
+        <div class="overall-copy">
+          <h2 id="overall-title">Vérification en cours…</h2>
+          <p id="overall-subtitle">Interrogation des services Nexera Pay…</p>
+        </div>
+        <div class="overall-uptime">
+          <div class="num" id="uptime-num">—</div>
+          <div class="lbl">Uptime 30 min</div>
+        </div>
+      </div>
     </div>
 
     <div class="services">
       <div class="service" data-check="api">
-        <div>
+        <div class="service-copy">
           <div class="name">API Nexera Pay</div>
           <div class="desc">Endpoints publics pay.nexera.africa/v1/*</div>
           <div class="history" id="history-api"></div>
         </div>
         <span class="status-badge checking" id="status-api">
-          <span class="dot"></span>Checking
+          <span class="b-dot"></span>Checking
         </span>
       </div>
       <div class="service" data-check="db">
-        <div>
+        <div class="service-copy">
           <div class="name">Base de données</div>
-          <div class="desc">MySQL nexera_pay (transactions + audit log)</div>
+          <div class="desc">MySQL nexera_pay — transactions + audit log</div>
         </div>
         <span class="status-badge checking" id="status-db">
-          <span class="dot"></span>Checking
+          <span class="b-dot"></span>Checking
         </span>
       </div>
       <div class="service" data-check="redis">
-        <div>
+        <div class="service-copy">
           <div class="name">Cache Redis</div>
-          <div class="desc">Idempotency + rate limit + queue webhooks</div>
+          <div class="desc">Idempotency + rate limit + file webhooks</div>
         </div>
         <span class="status-badge checking" id="status-redis">
-          <span class="dot"></span>Checking
+          <span class="b-dot"></span>Checking
         </span>
       </div>
       <div class="service" data-check="moko_mm_configured">
-        <div>
+        <div class="service-copy">
           <div class="name">Moko Mobile Money</div>
-          <div class="desc">PayDRC — M-Pesa, Airtel, Orange, Afrimoney</div>
+          <div class="desc">PayDRC — M-Pesa · Airtel · Orange · Afrimoney</div>
         </div>
         <span class="status-badge checking" id="status-moko_mm_configured">
-          <span class="dot"></span>Checking
+          <span class="b-dot"></span>Checking
         </span>
       </div>
       <div class="service" data-check="moko_card_configured">
-        <div>
+        <div class="service-copy">
           <div class="name">Moko Card</div>
-          <div class="desc">Cybersource wrapper — Visa, Mastercard, 3DS</div>
+          <div class="desc">Cybersource wrapper — Visa · Mastercard · 3DS</div>
         </div>
         <span class="status-badge checking" id="status-moko_card_configured">
-          <span class="dot"></span>Checking
+          <span class="b-dot"></span>Checking
         </span>
       </div>
     </div>
 
-    <div class="updated" id="updated">Dernière vérification : jamais</div>
+    <div class="updated">
+      <span class="refresh-dot"></span>
+      <span id="updated">Refresh auto toutes les 30 s</span>
+    </div>
 
     <footer>
       <p>
-        Historique + incidents détaillés sur GitHub :
-        <a href="https://github.com/nexera-africa/nexera-pay-status">nexera-africa/nexera-pay-status</a>
+        Historique des incidents :
+        <a href="https://github.com/Nexera-Africa-DRC/nexera-pay-status/issues?q=label%3Aincident+" target="_blank" rel="noopener">journal public</a>
       </p>
-      <p style="margin-top: 8px">
-        Refresh auto toutes les 30 secondes · Nexera Pay v1
-      </p>
+      <div class="signature">
+        <span class="brand">Nexera Pay</span> · Fais-le tourner.
+      </div>
     </footer>
   </div>
 
@@ -179,82 +348,110 @@
       try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || {}; }
       catch { return {}; }
     }
-    function saveHistory(h) { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
-
-    function setStatus(id, state, label) {
+    function saveHistory(h) {
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch {}
+    }
+    function push(h, key, up) {
+      const arr = h[key] || [];
+      arr.push(up ? 1 : 0);
+      while (arr.length > HISTORY_LEN) arr.shift();
+      h[key] = arr;
+    }
+    function renderHistory(key) {
+      const el = document.getElementById('history-' + key);
+      if (!el) return;
+      const h = loadHistory();
+      const arr = h[key] || [];
+      const padded = Array(HISTORY_LEN - arr.length).fill(null).concat(arr);
+      el.innerHTML = padded.map(v => {
+        if (v === null) return '<div class="bar no-data" title="pas de donnée"></div>';
+        if (v === 1) return '<div class="bar" title="OK"></div>';
+        return '<div class="bar down" title="KO"></div>';
+      }).join('');
+    }
+    function setBadge(id, state, label) {
       const el = document.getElementById('status-' + id);
       if (!el) return;
       el.className = 'status-badge ' + state;
-      el.innerHTML = '<span class="dot"></span>' + label;
+      el.innerHTML = '<span class="b-dot"></span>' + label;
     }
-
-    function renderHistory(id, entries) {
-      const container = document.getElementById('history-' + id);
-      if (!container) return;
-      container.innerHTML = '';
-      // Padd si pas plein
-      const padded = Array(HISTORY_LEN - entries.length).fill(null).concat(entries).slice(-HISTORY_LEN);
-      padded.forEach(v => {
-        const bar = document.createElement('div');
-        bar.className = 'bar' + (v === null ? ' no-data' : v === false ? ' down' : '');
-        container.appendChild(bar);
-      });
+    function setOverall(state, title, sub) {
+      const el = document.getElementById('overall');
+      if (!el) return;
+      el.className = 'overall ' + (state === 'up' ? '' : state);
+      document.getElementById('overall-title').textContent = title;
+      document.getElementById('overall-subtitle').textContent = sub;
+      const pt = document.getElementById('page-title');
+      if (pt) pt.textContent = title;
+    }
+    function computeUptime() {
+      const h = loadHistory();
+      const apiHist = h.api || [];
+      if (apiHist.length === 0) return null;
+      const ups = apiHist.filter(v => v === 1).length;
+      return Math.round((ups / apiHist.length) * 1000) / 10;
+    }
+    function renderUptime() {
+      const el = document.getElementById('uptime-num');
+      if (!el) return;
+      const u = computeUptime();
+      el.textContent = u === null ? '—' : (u.toFixed(1) + ' %');
     }
 
     async function check() {
-      let data = null; let overall = 'down';
       const history = loadHistory();
-
       try {
         const res = await fetch(HEALTH_URL, { cache: 'no-store' });
-        if (res.ok) {
-          data = await res.json();
-          overall = 'up';
+        const data = res.ok ? await res.json() : null;
+        const apiUp = res.ok;
+        setBadge('api', apiUp ? 'up' : 'down', apiUp ? 'Opérationnel' : 'Down');
+        push(history, 'api', apiUp);
+
+        const dbUp = data?.db === 'ok';
+        setBadge('db', dbUp ? 'up' : 'down', dbUp ? 'Opérationnel' : 'Down');
+        push(history, 'db', dbUp);
+
+        const redisUp = data?.redis === 'ok';
+        setBadge('redis', redisUp ? 'up' : 'down', redisUp ? 'Opérationnel' : 'Down');
+        push(history, 'redis', redisUp);
+
+        const mmUp = data?.moko_mm_configured === true;
+        setBadge('moko_mm_configured', mmUp ? 'up' : 'degraded', mmUp ? 'Opérationnel' : 'Non configuré');
+        push(history, 'moko_mm_configured', mmUp);
+
+        const cardUp = data?.moko_card_configured === true;
+        setBadge('moko_card_configured', cardUp ? 'up' : 'degraded', cardUp ? 'Opérationnel' : 'Non configuré');
+        push(history, 'moko_card_configured', cardUp);
+
+        // Overall status
+        const critical = apiUp && dbUp && redisUp;
+        const providers = mmUp && cardUp;
+        if (critical && providers) {
+          setOverall('up', 'Tous les services opérationnels', 'Nexera Pay fonctionne normalement.');
+        } else if (critical) {
+          setOverall('degraded', 'Service dégradé', 'Certains providers de paiement ne sont pas configurés.');
+        } else {
+          setOverall('down', 'Service interrompu', 'Un composant critique est indisponible.');
         }
       } catch (e) {
-        overall = 'down';
+        setBadge('api', 'down', 'Injoignable');
+        setBadge('db', 'checking', 'Inconnu');
+        setBadge('redis', 'checking', 'Inconnu');
+        setBadge('moko_mm_configured', 'checking', 'Inconnu');
+        setBadge('moko_card_configured', 'checking', 'Inconnu');
+        push(history, 'api', false);
+        setOverall('down', 'Service interrompu', 'Impossible de joindre pay.nexera.africa — vérifie ta connexion ou reviens dans quelques minutes.');
       }
-
-      const checks = ['api', 'db', 'redis', 'moko_mm_configured', 'moko_card_configured'];
-      checks.forEach(key => {
-        let ok;
-        if (key === 'api') ok = data !== null;
-        else if (data && data[key] !== undefined) {
-          ok = data[key] === 'ok' || data[key] === true;
-        } else ok = null;
-
-        if (ok === true) setStatus(key, 'up', 'Opérationnel');
-        else if (ok === false) setStatus(key, 'down', 'Down');
-        else setStatus(key, 'degraded', 'Non-configuré');
-
-        if (ok !== null) {
-          if (!history[key]) history[key] = [];
-          history[key].push(ok);
-          history[key] = history[key].slice(-HISTORY_LEN);
-        }
-        renderHistory(key, history[key] || []);
-      });
       saveHistory(history);
-
-      const overallEl = document.getElementById('overall');
-      const title = document.getElementById('overall-title');
-      const sub = document.getElementById('overall-subtitle');
-      if (overall === 'up') {
-        overallEl.className = 'overall';
-        title.textContent = 'All Systems Operational';
-        sub.textContent = 'Tous les services Nexera Pay fonctionnent normalement.';
-      } else {
-        overallEl.className = 'overall down';
-        title.textContent = 'Service Disruption';
-        sub.textContent = 'Impossible de joindre pay.nexera.africa — vérifie ta connexion ou reviens dans quelques minutes.';
-      }
-
+      renderHistory('api');
+      renderUptime();
+      const now = new Date();
       document.getElementById('updated').textContent =
-        'Dernière vérification : ' + new Date().toLocaleString('fr-FR');
+        'Dernière vérification : ' + now.toLocaleTimeString('fr-FR') + ' · refresh auto 30 s';
     }
 
     check();
-    setInterval(check, 30_000);
+    setInterval(check, 30000);
   </script>
 </body>
 </html>

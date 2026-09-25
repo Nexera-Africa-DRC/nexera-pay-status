@@ -1,0 +1,86 @@
+name: 🚨 Incident Nexera Pay
+description: Documenter une perturbation ou une interruption de service.
+title: "[Incident YYYY-MM-DD] <résumé court>"
+labels: ["incident"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de renseigner cet incident. Format post-mortem light :
+        ce fil sert de **registre public** pour les marchands qui suivent
+        `status.nexera.africa`. Chaque incident doit être créé rapidement
+        (même incomplet) et complété au fur et à mesure.
+
+  - type: input
+    id: started_at
+    attributes:
+      label: Début (UTC)
+      description: Heure de première détection (YYYY-MM-DD HH:MM UTC).
+      placeholder: "2026-09-25 14:30 UTC"
+    validations:
+      required: true
+
+  - type: input
+    id: resolved_at
+    attributes:
+      label: Résolution (UTC)
+      description: Heure de retour à la normale. Laisser vide si en cours.
+      placeholder: "2026-09-25 15:12 UTC"
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      description: Niveau de gravité perçu par les marchands.
+      options:
+        - "🟢 Mineur — dégradation partielle, transactions non impactées"
+        - "🟡 Majeur — service dégradé, une partie des paiements affectés"
+        - "🔴 Critique — service indisponible, aucun paiement possible"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: components
+    attributes:
+      label: Composants touchés
+      description: Cochez tout ce qui a été impacté.
+      options:
+        - label: API Nexera Pay (pay.nexera.africa/v1/*)
+        - label: Base de données MySQL
+        - label: Cache Redis
+        - label: Moko Mobile Money (M-Pesa, Airtel, Orange, Afrimoney)
+        - label: Moko Card (Cybersource — Visa/Mastercard)
+        - label: Portail marchand (admin-pay.nexera.africa)
+        - label: Documentation (docs.nexera.africa)
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Résumé
+      description: 2-3 phrases décrivant ce qui s'est passé et l'impact concret sur les marchands.
+      placeholder: "Timeout sur les callbacks M-Pesa entre 14:30 et 15:12 UTC. Les transactions initiées pendant cette fenêtre sont restées en statut 'pending' jusqu'au rattrapage manuel."
+    validations:
+      required: true
+
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Chronologie
+      description: Timeline détaillée (à compléter au fil de l'incident).
+      value: |
+        - HH:MM — Détection : …
+        - HH:MM — Diagnostic : …
+        - HH:MM — Mitigation : …
+        - HH:MM — Résolution confirmée : …
+
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Cause racine
+      description: À remplir une fois l'incident résolu.
+
+  - type: textarea
+    id: actions
+    attributes:
+      label: Actions préventives
+      description: Ce qu'on met en place pour éviter la récidive (monitoring, alerte, code fix, doc…).
